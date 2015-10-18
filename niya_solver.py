@@ -1,3 +1,5 @@
+import time
+
 # how shall we represent a Niya position?
 # let's represent tiles by pairs (i,j) where i,j are 0 to 3
 # let's represent pieces of the players by (-1,1) and (-1,-1)
@@ -94,6 +96,12 @@ def bestMoveAndScore(board,who,previous,lookahead):
         lookup[board[i]] = i
 
     def next_moves():
+        '''return the locations of the next possible moves'''
+        if(previous == None):
+            return [ 0, 1, 2, 3,
+                     4,       7,
+                     8,       11,
+                     12,13,14,15]
         running_list = []
         def helper(t):
             if(t == previous):
@@ -195,21 +203,27 @@ board = [(i % 4,i//4) for i in range(16)]
 shuffle(board)
 #print(board)
 display(board)
-# ell = build_lookup(board)
-# #print(ell)
-curr = randrange(15)
-while(curr in [5,6,9,10]):
-    curr = randrange(15)
-print("Moving randomly at location " + str(curr))
-prev = board[curr]
-board[curr] = (-1,1)
-display(board)
-who = -1
+
+# curr = randrange(15)
+# while(curr in [5,6,9,10]):
+#     curr = randrange(15)
+# print("Moving randomly at location " + str(curr))
+# prev = board[curr]
+# board[curr] = (-1,1)
+# display(board)
+# who = -1
+
+prev = None
+who = 1
+
 over = False
 while not over:    
-    ahead = 15
+    ahead = 16
     # print("Analyzing with lookahead " + str(ahead))
+    blah = time.perf_counter()
     (mov,scor) = bestMoveAndScore(board,who,prev,ahead)
+    blah = time.perf_counter() - blah
+    print("After thinking for %.2f secs, " % blah,end="")
     if mov is None:
         over = True
         print("Player " + str(who) + " forfeits")
