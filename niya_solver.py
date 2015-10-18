@@ -60,17 +60,20 @@ def multiplier(board):
             mult += 1
     return mult
 
+
+def name_piece(t):
+    if(t[0] != -1):
+        return "abcd"[t[0]] + str(t[1])
+    if(t[1] == 1):
+        return '++'
+    return '--'
+
+
 def display(board):
-    def helper(t):
-        if(t[0] != -1):
-            return str(t[0]) + str(t[1])
-        if(t[1] == 1):
-            return '++'
-        return '--'
     for i in range(4):
         s = ""
         for j in range(4):
-            s += helper(board[code(i,j)]) + " "
+            s += name_piece(board[code(i,j)]) + " "
         print(s)
 
 def build_lookup(board):
@@ -158,37 +161,39 @@ def bestMoveAndScore(board,who,previous,lookup,lookahead,ub,lb):
 
 
 from random import *
-x = [(i % 4,i//4) for i in range(16)]
-shuffle(x)
-print(x)
-display(x)
-ell = build_lookup(x)
-print(ell)
+board = [(i % 4,i//4) for i in range(16)]
+shuffle(board)
+#print(board)
+display(board)
+ell = build_lookup(board)
+#print(ell)
 curr = randrange(15)
 while(curr in [5,6,9,10]):
     curr = randrange(15)
 print("Moving randomly at location " + str(curr))
-prev = x[curr]
-x[curr] = (-1,1)
-display(x)
+prev = board[curr]
+board[curr] = (-1,1)
+display(board)
 who = -1
 over = False
 while not over:    
-    mov = next_moves(x,prev,ell)
+    mov = next_moves(board,prev,ell)
     ahead = 15
     # print("Analyzing with lookahead " + str(ahead))
-    (mov,scor) = bestMoveAndScore(x,who,prev,ell,ahead,100*maxScore,-100*maxScore)
+    (mov,scor) = bestMoveAndScore(board,who,prev,ell,
+                                  ahead,100*maxScore,-100*maxScore)
     if mov == -1:
         over = True
         print("Player " + str(who) + " forfeits")
     else:
-        prev = x[mov]
-        print("Player " + str(who) + " is picking up piece " + str(prev[0]) + str(prev[1]) + ", expecting a score of " + str(scor))
-        x[mov] = (-1,who)
-        display(x)
+        prev = board[mov]
+        print("Player " + str(who) + " is picking up piece " +
+              name_piece(prev)+  ", expecting a score of " + str(scor))
+        board[mov] = (-1,who)
+        display(board)
         # print("Score is now " + str(score(x)))
         who = -who
-        ess = score(x)
+        ess = score(board)
         if (ess >= maxScore):
             over = True
             print("Player 1 wins!")
