@@ -1,3 +1,4 @@
+import random
 import time
 
 # how shall we represent a Niya position?
@@ -198,20 +199,10 @@ def bestMoveAndScore(board,who,previous,lookahead):
     
 
 
-from random import *
-board = [(i % 4,i//4) for i in range(16)]
-shuffle(board)
-#print(board)
-display(board)
 
-# curr = randrange(15)
-# while(curr in [5,6,9,10]):
-#     curr = randrange(15)
-# print("Moving randomly at location " + str(curr))
-# prev = board[curr]
-# board[curr] = (-1,1)
-# display(board)
-# who = -1
+board = [(i % 4,i//4) for i in range(16)]
+random.shuffle(board)
+display(board)
 
 prev = None
 who = 1
