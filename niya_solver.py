@@ -1,5 +1,7 @@
 import random
-import time
+# import time
+# import threading
+
 
 # how shall we represent a Niya position?
 # let's represent tiles by pairs (i,j) where i,j are 0 to 3
@@ -197,40 +199,50 @@ def bestMoveAndScore(board,who,previous,lookahead):
 
        
     
+def do_stuff():
 
 
+    board = [(i % 4,i//4) for i in range(16)]
+    random.shuffle(board)
+    display(board)
 
-board = [(i % 4,i//4) for i in range(16)]
-random.shuffle(board)
-display(board)
+    prev = None
+    who = 1
 
-prev = None
-who = 1
-
-over = False
-while not over:    
-    ahead = 16
-    # print("Analyzing with lookahead " + str(ahead))
-    blah = time.perf_counter()
-    (mov,scor) = bestMoveAndScore(board,who,prev,ahead)
-    blah = time.perf_counter() - blah
-    print("After thinking for %.2f secs, " % blah,end="")
-    if mov is None:
-        over = True
-        print("Player " + str(who) + " forfeits")
-    else:
-        prev = board[mov]
-        print("Player " + str(who) + " is picking up piece " +
-              name_piece(prev)+  ", expecting a score of " + str(scor))
-        board[mov] = (-1,who)
-        display(board)
-        # print("Score is now " + str(score(x)))
-        who = -who
-        ess = score(board)
-        if (ess[0] == 1):
+    over = False
+    while not over:    
+        ahead = 16
+        # print("Analyzing with lookahead " + str(ahead))
+        blah = time.perf_counter()
+        (mov,scor) = bestMoveAndScore(board,who,prev,ahead)
+        blah = time.perf_counter() - blah
+        print("After thinking for %.2f secs, " % blah,end="")
+        if mov is None:
             over = True
-            print("Player 1 wins!")
-        elif (ess[0] == -1):
-            over = True
-            print("Player -1 wins!")
+            print("Player " + str(who) + " forfeits")
+        else:
+            prev = board[mov]
+            print("Player " + str(who) + " is picking up piece " +
+                  name_piece(prev)+  ", expecting a score of " + str(scor))
+            board[mov] = (-1,who)
+            display(board)
+            # print("Score is now " + str(score(x)))
+            who = -who
+            ess = score(board)
+            if (ess[0] == 1):
+                over = True
+                print("Player 1 wins!")
+            elif (ess[0] == -1):
+                over = True
+                print("Player -1 wins!")
 
+
+
+# do_stuff()
+
+# threading.Thread(target=do_stuff).start()
+# while(True):
+#     blah = input("> ")
+#     print("You typed " + blah)
+
+    
