@@ -1,6 +1,6 @@
 import random
-# import time
-# import threading
+import time
+import threading
 
 
 # how shall we represent a Niya position?
@@ -11,7 +11,7 @@ import random
 # no point actually storing things as a 4 by 4 array
 
 def code(i,j):
-    return i*4 + j
+    return i + j*4
 
 def get_checks():
     for i in range(4):
@@ -86,11 +86,17 @@ def display(board):
         print(s)
 
 
-
+cache = {}
+remember_depth = 4
 
 # FUN WITH CLOSURES
 
 def bestMoveAndScore(board,who,previous,lookahead):
+    print("bMAS called with position")
+    display(board)
+    print("And " + ("Red" if who == -1 else "Black") + " is about to move")
+    depth = 0
+    
     lookup = {}
     for i in range(4):
         for j in range(4):
@@ -101,10 +107,11 @@ def bestMoveAndScore(board,who,previous,lookahead):
     def next_moves():
         '''return the locations of the next possible moves'''
         if(previous == None):
-            return [ 0, 1, 2, 3,
-                     4,       7,
-                     8,       11,
-                     12,13,14,15]
+            perimeter = [ 0, 1, 2, 3,
+                          4,       7,
+                          8,      11,
+                         12,13,14,15]
+            return [p for p in perimeter if board[p][0] != -1]
         running_list = []
         def helper(t):
             if(t == previous):
@@ -120,11 +127,21 @@ def bestMoveAndScore(board,who,previous,lookahead):
     # returns (move,score), where
     # min(ub,max(lb,score)) = min(ub,max(lb,true_score))
     # and where move is a move attaining score
-    # assuming ub < score < lb and the game ain't over
+    # assuming lb < score < ub and the game ain't over
     # and lookahead is positive...
     # else move is garbage/None
     def recursive_eval(ub,lb):
-        nonlocal who, previous, lookahead
+        key = (who,previous,tuple(board))
+        if(key in cache):
+            return cache[key]
+        (move,score) = inner_recursive_eval(ub,lb)
+        if(depth <= remember_depth and lookahead > 0
+           and lb < score and score < ub):
+            cache[key] = (move,score)
+        return (move,score)
+    
+    def inner_recursive_eval(ub,lb):
+        nonlocal who, previous, lookahead, depth
         # nonlocal board, lookup... except they're not getting assigned to
 
         # print("Considering this position with lookahead = %d:" % lookahead)
@@ -154,6 +171,7 @@ def bestMoveAndScore(board,who,previous,lookahead):
             bestMove = None
 
             lookahead -= 1
+            depth += 1
             who = -1
             old_prev = previous
             for m in moves:
@@ -170,12 +188,14 @@ def bestMoveAndScore(board,who,previous,lookahead):
             previous = old_prev
             who = 1
             lookahead += 1
+            depth -= 1
             return (bestMove,bestScore)
         else:
             bestScore = ub
             bestMove = None
 
             lookahead -= 1
+            depth += 1
             who = 1
             old_prev = previous
             for m in moves:
@@ -192,6 +212,7 @@ def bestMoveAndScore(board,who,previous,lookahead):
             previous = old_prev
             who = -1
             lookahead += 1
+            depth -= 1
             return (bestMove,bestScore)
         
     return recursive_eval((2,0),(-2,0))

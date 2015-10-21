@@ -48,7 +48,7 @@ for i in range(1,5):
 
 
 def coord_conv(x,y):
-    r = cell//2-3
+    r = cell//2-6
     return (x-r,y-r,x+r,y+r)
 
 
@@ -243,12 +243,13 @@ for i in range(16):
     plant=i//4
     unders.append(Piece(simpler_coord(poem+7,plant+1),poem,plant))
     homes.append(simpler_coord(poem+7,plant+1))
-    names.append((poem,plant))
+    names.append((plant,poem))
 
 
 move_marker = LetterDisk(simpler_coord(4,0),'lightgreen','Go')
 
 def move_marker_behave(loc):
+    global who
     (x,y) = loc
     if(y < 3*cell):
         who = -1
