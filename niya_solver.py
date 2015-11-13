@@ -430,7 +430,7 @@ serial = 0
 def for_real(board,prev,who):
     my_serial = serial
     local_who = who
-    (move,score) = analyzer.bestMoveAndScore(board,local_who,prev,16)
+    (move,score) = analyzer.bestMoveAndScore(board,local_who,prev)
     if(serial == my_serial):
         current = "Red" if local_who == -1 else "Black"
         winner = "Red" if score[0] == -1 else "Black"

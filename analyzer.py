@@ -91,7 +91,7 @@ remember_depth = 4
 
 # FUN WITH CLOSURES
 
-def bestMoveAndScore(board,who,previous,lookahead):
+def bestMoveAndScore(board,who,previous):
     print("bMAS called with position")
     display(board)
     print("And " + ("Red" if who == -1 else "Black") + " is about to move")
@@ -128,30 +128,27 @@ def bestMoveAndScore(board,who,previous,lookahead):
     # min(ub,max(lb,score)) = min(ub,max(lb,true_score))
     # and where move is a move attaining score
     # assuming lb < score < ub and the game ain't over
-    # and lookahead is positive...
     # else move is garbage/None
     def recursive_eval(ub,lb):
         key = (who,previous,tuple(board))
         if(key in cache):
             return cache[key]
         (move,score) = inner_recursive_eval(ub,lb)
-        if(depth <= remember_depth and lookahead > 0
-           and lb < score and score < ub):
+        if(depth <= remember_depth and lb < score and score < ub):
             cache[key] = (move,score)
         return (move,score)
     
     def inner_recursive_eval(ub,lb):
-        nonlocal who, previous, lookahead, depth
+        nonlocal who, previous, depth
         # nonlocal board, lookup... except they're not getting assigned to
 
-        # print("Considering this position with lookahead = %d:" % lookahead)
         # display(board)
         
         moves = next_moves()
         if(len(moves) == 0):
             return (None,(-who,-who*tiles_left(board)))
         s = score(board)
-        if(lookahead <= 0 or s[0] != 0): # s[0] != 0 checks for game over
+        if(s[0] != 0): # s[0] != 0 checks for game over
             return (None,s)
 
         # sort the moves
@@ -170,7 +167,6 @@ def bestMoveAndScore(board,who,previous,lookahead):
             bestScore = lb
             bestMove = None
 
-            lookahead -= 1
             depth += 1
             who = -1
             old_prev = previous
@@ -187,14 +183,12 @@ def bestMoveAndScore(board,who,previous,lookahead):
                     break
             previous = old_prev
             who = 1
-            lookahead += 1
             depth -= 1
             return (bestMove,bestScore)
         else:
             bestScore = ub
             bestMove = None
 
-            lookahead -= 1
             depth += 1
             who = 1
             old_prev = previous
@@ -211,7 +205,6 @@ def bestMoveAndScore(board,who,previous,lookahead):
                     break
             previous = old_prev
             who = -1
-            lookahead += 1
             depth -= 1
             return (bestMove,bestScore)
         
@@ -233,7 +226,6 @@ def do_stuff():
     over = False
     while not over:    
         ahead = 16
-        # print("Analyzing with lookahead " + str(ahead))
         blah = time.perf_counter()
         (mov,scor) = bestMoveAndScore(board,who,prev,ahead)
         blah = time.perf_counter() - blah
