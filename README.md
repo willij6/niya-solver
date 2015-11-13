@@ -12,7 +12,7 @@ pruning with move sorting).
 
 I then added a GUI, using Tkinter.
 
-The whole thing is written in Python.  **The main program is regraphics.py**
+The whole thing is written in Python.  **The main program is niya_solver.py**
 
 ## Controls
 Eventually, a toolbar will be added, but for now,
