@@ -116,7 +116,7 @@ def bestMoveAndScore(board,who,previous):
         def helper(t):
             if(t == previous):
                 return
-            if(lookup[t] and board[lookup[t]] == t):
+            if(lookup[t] is not False and board[lookup[t]] == t):
                 running_list.append(lookup[t])
         for i in range(4):
             helper((previous[0],i))
@@ -225,9 +225,8 @@ def do_stuff():
 
     over = False
     while not over:    
-        ahead = 16
         blah = time.perf_counter()
-        (mov,scor) = bestMoveAndScore(board,who,prev,ahead)
+        (mov,scor) = bestMoveAndScore(board,who,prev)
         blah = time.perf_counter() - blah
         print("After thinking for %.2f secs, " % blah,end="")
         if mov is None:
