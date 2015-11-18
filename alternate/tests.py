@@ -148,12 +148,26 @@ class TestPosition(unittest.TestCase):
                                   board.previous_piece)
         self.assertEqual(board.tile_count,4*4-nMoves)
 
+
+
+    # Test get_key
+    def test_hashable_key(self):
+        nMoves = 4
+        board = Position(self.pieces,black(),None)
+        table = {}
+        moves = []
+        for i in range(nMoves):
+            table[board.get_key()] = i
+            move = board.get_moves().pop()
+            moves.append(move)
+            move.do()
+        for i in range(nMoves):
+            move = moves.pop()
+            j = len(moves)
+            move.undo()
+            self.assertEqual(table[board.get_key()],j)
+            self.assertEqual(i+j,nMoves-1)
+            
+
         
 
-    def test_trial_run(self):
-        # see if it runs without crashing...
-        trial_run()
-        # is this a bad sort of test?
-        # There are no asserts,
-        # and it takes forever to run
-        

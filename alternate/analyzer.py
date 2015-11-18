@@ -102,6 +102,8 @@ class Position:
         self.checks = get_victory_configs()
 
 
+
+
     def get_piece(self,i,j):
         '''Get the piece at location (i,j)'''
         return self.pieces[loc(i,j)]
@@ -168,7 +170,7 @@ class Position:
         (winner,details) = self.score()
         return winner
 
-    def eval(self):
+    def old_eval(self):
         '''Evaluate a position, by analyzing it completely using
         the helper class Analysis'''
         immediate_score = self.score()
@@ -177,10 +179,29 @@ class Position:
         # (2,0) is higher than any possible score,
         # and (-2,0) is lower than any possible score
         return Analysis(self).alpha_beta_helper((2,0),(-2,0))
+        
+    def eval(self):
+        '''Evaluate a position, by analyzing it completely using
+        the helper class Analysis'''
+        immediate_score = self.score()
+        if immediate_score[0] != 0:
+            return immediate_score
+        (score,move) = self.alpha_beta_helper((2,0),(-2,0),0)
+        return score
+        # # (2,0) is higher than any possible score,
+        # # and (-2,0) is lower than any possible score
+        # return Analysis(self).alpha_beta_helper((2,0),(-2,0))
 
     def best_move(self):
         '''Return an optimal move (as a Move object),
         or None if the game is over'''
+        immediate_score = self.score()
+        if immediate_score[0] != 0:
+            return None
+        (score,move) = self.alpha_beta_helper((2,0),(-2,0),0)
+        return move
+
+    def old_best_move(self):
         immediate_score = self.score()
         if immediate_score[0] != 0:
             return None
@@ -209,6 +230,95 @@ class Position:
                     bestMove = move
             return bestMove
 
+
+    # get a hashable description of this position
+    def get_key(self):
+        return (tuple(self.pieces),self.next_player,self.previous_piece)
+
+
+
+    def alpha_beta_helper(self,upper,lower,depth):
+        '''Recursively evaluate this position,
+        Assumption: self is non-terminal, upper >= lower
+        Return (s,move) where
+            min(upper,max(lower,s)) = min(upper,max(lower,score))
+        where score is the true final score under perfect play,
+        AND if lower < s < upper, then move is an optimal move.'''        
+
+        # first try all the moves and collect their scores
+        def assess_move(move):
+            move.do()
+            score = self.score()
+            move.undo()
+            return score
+
+        move_list = []
+        for m in self.get_moves():
+            score = assess_move(m)
+            if(score[0] == self.next_player):
+                return (score,m) # it's optimal
+            elif(score[0] == -self.next_player):
+                garbage = (score,m)
+            else:
+                move_list.append((score,m))
+        
+        if len(move_list) == 0:
+            # all moves were (equally) terrible
+            return garbage
+            
+        # sort the moves
+        if(self.next_player > 0):
+            # Black is maximizing the score
+            move_list.sort(key = (lambda x: x[0]), reverse = True)
+        else:
+            # Red is minimizing the score
+            move_list.sort(key = (lambda x: x[0]), reverse = False)
+        # strip off the immediate scores
+        move_list = [move for (score,move) in move_list]
+            
+        if(self.next_player > 0):
+            bestScore = lower
+            bestMove = None
+            for move in move_list:
+                move.do()
+                (score,junk) = self.alpha_beta_helper(upper,bestScore,depth+1)
+                move.undo()
+                if(score > bestScore):
+                    bestScore = score
+                    bestMove = move
+                if(score >= upper):
+                    return (bestScore,bestMove)
+            return (bestScore,bestMove)
+        else:
+            bestScore = upper
+            bestMove = None
+            for move in move_list:
+                move.do()
+                (score,junk) = self.alpha_beta_helper(bestScore,lower,depth+1)
+                move.undo()
+                if(score < bestScore):
+                    bestScore = score
+                    bestMove = move
+                if(score <= lower):
+                    return (bestScore,bestMove)
+            return (bestScore,bestMove)
+
+    # Let's see whether I can do this correctly
+    inner_ab = alpha_beta_helper
+    cache = {}
+    def alpha_beta_helper(self,upper,lower,depth):
+        key = self.get_key()
+        if key in Position.cache:
+            return Position.cache[key]
+        (score,move) = Position.inner_ab(self,upper,lower,depth)
+        if depth < 4 and lower < score and score < upper:
+            Position.cache[key] = (score,move)
+        return (score,move)
+    
+                
+            
+        
+        
 
     def __str__(self):
         retval = ""
@@ -264,6 +374,7 @@ class Move:
         j = self.location // 4
         return (i,j)
 
+
     
 class Analysis:
     '''A class for managing all the temporary data
@@ -299,7 +410,7 @@ class Analysis:
             return Analysis.cache[key]
         score = self.inner_alpha_beta_helper(ub,lb)
         if(self.depth <= Analysis.remember_depth
-           and lb < score and score < ub):
+           and lb < score and score < ub and False):
             Analysis.cache[key] = score
         return score
 
@@ -322,7 +433,7 @@ class Analysis:
             # If none exist, sort the non-terminal moves
             # by score and analyze them one by one
             for round in range(2):                
-                bestScore = lb
+                bestScore = lb if round == 1 else (-2,0)
                 for m in moves:
                     m.do()
                     if round == 0:
@@ -334,7 +445,7 @@ class Analysis:
                     m.undo()
                     if round == 0 and score[0] == 0:
                         non_terminal_moves.append((score[1],m))
-                    if(score >= ub):
+                    if(score >= ub and round == 1):
                         return score
                     if(score > bestScore):
                         bestScore = score
@@ -355,7 +466,7 @@ class Analysis:
             # If none exist, sort the non-terminal moves
             # by score and analyze them one by one
             for round in range(2):                
-                bestScore = ub
+                bestScore = ub if round == 1 else (2,0)
                 for m in moves:
                     m.do()
                     if round == 0:
@@ -367,7 +478,7 @@ class Analysis:
                     m.undo()
                     if round == 0 and score[0] == 0:
                         non_terminal_moves.append((score[1],m))
-                    if(score <= lb):
+                    if(score <= lb and round == 1):
                         return score
                     if(score < bestScore):
                         bestScore = score
@@ -381,8 +492,14 @@ class Analysis:
 
 
 def trial_run():
-
-    pieces = [[tile(i,j) for i in range(4)] for j in range(4)]
+    '''Play a sample game'''
+    pieces = []
+    for i in range(4):
+        for j in range(4):
+            pieces.append(tile(i,j))
+    random.shuffle(pieces)
+    pieces = [[pieces[i*4+j] for i in range(4)] for j in range(4)]
+    # pieces = [[tile(i,j) for i in range(4)] for j in range(4)]
     board = Position(pieces,black(),None)
     print(board)
     while(True):
@@ -398,6 +515,14 @@ def trial_run():
             m = board.best_move()
             tup = m.get_location()
             print("Best move is at " + str(tup))
+            s = board.eval()
+            # ss = board.old_eval()
+            # if(s != ss):
+            #     print(board)
+            #     print(s)
+            #     print(ss)
+            #     assert(False)
+            print("Expected score " + str(s))
             m.do()
             print(board)
 
