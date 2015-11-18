@@ -1,5 +1,5 @@
 from analyzer import tile, Position, black, red
-from analyzer import player_piece, Move, trial_run, loc
+from analyzer import player_piece, Move, loc
 import unittest
 
 

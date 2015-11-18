@@ -404,14 +404,14 @@ class StateManager:
         global serial
         serial += 1
         prev = None
-        board = [None for i in range(16)]
+        board = [[None for i in range(4)] for j in range(4)]
         for i in range(len(self.names)):
             if(self.in_slot[i]):
                 (x,y) = self.locs[i]
                 if (x,y) == (0,0):
                     prev = self.names[i]
                 elif 1 <= x and x <= 4 and 1 <= y and y <= 4:
-                    board[analyzer.code(y-1,x-1)] = self.names[i]
+                    board[y-1][x-1] = self.names[i]
         if(None in board):
             status.config(text="Incomplete Position")
             return
@@ -430,18 +430,20 @@ serial = 0
 def for_real(board,prev,who):
     my_serial = serial
     local_who = who
-    (move,score) = analyzer.bestMoveAndScore(board,local_who,prev)
+    pos = analyzer.Position(board,local_who,prev)
+    score = pos.eval()
+    move = pos.best_move()
+    # (move,score) = analyzer.bestMoveAndScore(board,local_who,prev)
     if(serial == my_serial):
         current = "Red" if local_who == -1 else "Black"
         winner = "Red" if score[0] == -1 else "Black"
         margin = score[1] if score[0] == 1 else -score[1]
         outcome = "%s wins by %d points." % (winner,margin)
-        if(move == None):
-            explanation = "%s must forfeit!" % current
-        elif(analyzer.score(board)[0] != 0):
-            explanation = "%s has already won!" % winner
+        if(pos.check_victory() != 0):
+            explanation = "%s has won!" % winner
         else:
-            explanation = "An optimal move is at (%d,%d)." % (move//4+1,move%4+1)
+            move = move.get_location()
+            explanation = "An optimal move is at (%d,%d)." % (move[0]+1,move[1]+1)
 
         status.config(text=outcome + "  " + explanation)
         # TODO: show the optimal move on the map
